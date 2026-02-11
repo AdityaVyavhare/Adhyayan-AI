@@ -203,161 +203,10 @@ export const ChatService = {
       if (!response.ok) {
         const errorText = await response.text();
         
-        // RESCUE ATTEMPT: "Tool choice is required" but "failed_generation" contains valid JSON
-        if (response.status === 500) {
-             let errorContent = errorText;
-             try {
-                 const parsedError = JSON.parse(errorText);
-                 if (parsedError.detail) {
-                     // Detail might be a string or object/array
-                     errorContent = typeof parsedError.detail === 'string' 
-                        ? parsedError.detail 
-                        : JSON.stringify(parsedError.detail);
-                 } else if (parsedError.error && parsedError.error.message) {
-                     errorContent = parsedError.error.message;
-                 }
-             } catch (e) {
-                 // Not valid JSON, process raw text
-             }
-
-             if (errorContent.includes('failed_generation')) {
-                 try {
-                     console.log("ChatService: Attempting to rescue failed generation from 500 error...");
-                     
-                     // Helper to extract the JSON string from failed_generation
-                     // The format is usually: 'failed_generation': '...JSON...'
-                     // But it can be nested in other structures. 
-                     // Let's Find the first occurrence of "failed_generation" and then the next quoted string
-                     
-                     // Regex to find: 'failed_generation':\s* ('|")
-                     // We need to support both single and double quotes for the value wrapper
-                     const markerRegex = /['"]failed_generation['"]:\s*(['"])([\s\S]*)/;
-                     const match = errorContent.match(markerRegex);
-                     
-                     if (match) {
-                         const quoteChar = match[1];
-                         let remaining = match[2];
-                         
-                         // Find the end of the string. Simple indexOf won't work due to escaping.
-                         // We need to walk forward and find the closing quote that isn't escaped.
-                         let jsonStr = "";
-                         let endFound = false;
-                         
-                         for (let i = 0; i < remaining.length; i++) {
-                             const char = remaining[i];
-                             if (char === '\\') {
-                                 // Escape sequence, consume next char
-                                 jsonStr += char;
-                                 if (i + 1 < remaining.length) {
-                                     jsonStr += remaining[i+1];
-                                     i++;
-                                 }
-                             } else if (char === quoteChar) {
-                                 // Found closing quote
-                                 endFound = true;
-                                 break;
-                             } else {
-                                 jsonStr += char;
-                             }
-                         }
-
-                         if (endFound) {
-                             // Now we have the python-repr string. Need to unescape it to get JSON.
-                             // Python repr escapes: \n -> \\n, ' -> \', " -> ", \ -> \\
-                             
-                             // 1. Unescape common control chars
-                             let unescaped = jsonStr
-                                .replace(/\\n/g, '\n')
-                                .replace(/\\r/g, '\r')
-                                .replace(/\\t/g, '\t');
-                             
-                             // 2. Unescape quotes. If wrapped in ', then \' becomes '
-                             if (quoteChar === "'") {
-                                 unescaped = unescaped.replace(/\\'/g, "'");
-                             } else {
-                                 unescaped = unescaped.replace(/\\"/g, '"');
-                             }
-                             
-                             // 3. Unescape backslashes (must be last)
-                             unescaped = unescaped.replace(/\\\\/g, "\\");
-
-                             console.log("ChatService: Extracted candidate JSON, length:", unescaped.length);
-                             
-                             let parsedRescue;
-                             try {
-                                parsedRescue = JSON.parse(unescaped);
-                             } catch (pErr) {
-                                 // LaTeX content creates invalid JSON escapes like \frac, \sqrt, \*, \p etc.
-                                 // Fix: re-escape lone backslashes not followed by valid JSON escape chars
-                                 try {
-                                     console.warn("ChatService: Strict JSON parse failed, fixing invalid escapes...");
-                                     const fixed = unescaped.replace(/\\(?!["\\/bfnrtu])/g, '\\\\');
-                                     parsedRescue = JSON.parse(fixed);
-                                 } catch (e2) {
-                                     // Last resort: try to extract just the arguments JSON object
-                                     try {
-                                         const argsMatch = unescaped.match(/"arguments"\s*:\s*\{/);
-                                         if (argsMatch && argsMatch.index !== undefined) {
-                                             let braceCount = 0;
-                                             let start = argsMatch.index + argsMatch[0].length - 1;
-                                             let end = start;
-                                             for (let j = start; j < unescaped.length; j++) {
-                                                 if (unescaped[j] === '{') braceCount++;
-                                                 else if (unescaped[j] === '}') braceCount--;
-                                                 if (braceCount === 0) { end = j + 1; break; }
-                                             }
-                                             const argsJson = unescaped.substring(start, end);
-                                             const fixedArgs = argsJson.replace(/\\(?!["\\/bfnrtu])/g, '\\\\');
-                                             parsedRescue = JSON.parse(fixedArgs);
-                                         }
-                                     } catch (e3) {
-                                         console.error("ChatService: All rescue parse attempts failed");
-                                     }
-                                 }
-                             }
-                             
-                            if (parsedRescue) {
-                                console.log("ChatService: Successfully rescued content.");
-
-                                // Unwrap tool-call wrapper: { name: "json", arguments: { ...actual content... } }
-                                if (parsedRescue.name && parsedRescue.arguments && typeof parsedRescue.arguments === 'object') {
-                                    console.log("ChatService: Unwrapping tool-call wrapper, name:", parsedRescue.name);
-                                    parsedRescue = parsedRescue.arguments;
-                                } else if (parsedRescue.name && typeof parsedRescue.arguments === 'string') {
-                                    try {
-                                        parsedRescue = JSON.parse(parsedRescue.arguments);
-                                    } catch (e) {
-                                        // keep parsedRescue as-is
-                                    }
-                                }
-
-                                const so = parsedRescue.structured_output && typeof parsedRescue.structured_output === 'object'
-                                  ? parsedRescue.structured_output
-                                  : parsedRescue;
-
-                                const rawBody = typeof so.body === 'string' ? so.body : '';
-                                const cleanBody = rawBody.replace(/\*\/\*/g, '\n\n');
-
-                                const rescueMessage: Message = {
-                                    id: `rescue_${Date.now()}`,
-                                    role: 'ai',
-                                    content: cleanBody || "Content recovered from error.",
-                                    title: so.title,
-                                    body: rawBody,
-                                    links: so.links,
-                                    manim_video_path: so.manim_video_path,
-                                    Need_of_manim: so.Need_of_manim,
-                                    next_related_topic: so.next_related_topic,
-                                    next_questions: so.next_questions,
-                                };
-                                return [rescueMessage];
-                            }
-                         }
-                     }
-                 } catch (rescueErr) {
-                     console.error("Rescue attempt failed:", rescueErr);
-                 }
-             }
+        // ─── RESCUE: Extract content from backend tool_use_failed errors ───
+        if (response.status === 500 || response.status === 400) {
+             const rescued = ChatService._rescueFromError(errorText);
+             if (rescued) return [rescued];
         }
         
         console.error(`sendMessage failed: ${response.status} - ${errorText}`);
@@ -936,15 +785,170 @@ export const ChatService = {
       }
   },
 
+  // ═══════════════════════════════════════════════════════════
+  // RESCUE & SANITIZE HELPERS
+  // ═══════════════════════════════════════════════════════════
+
+  /**
+   * Sanitize a raw JSON string fixing invalid escapes from LaTeX,
+   * Python repr artifacts, and over-escaping.
+   */
+  _sanitizeJsonString: (raw: string): string => {
+      let s = raw;
+      // 1. Collapse over-escaped backslashes: \\\\\\\\ → \\
+      while (s.includes('\\\\\\\\')) s = s.replace(/\\\\\\\\/g, '\\\\');
+      // 2. Fix invalid JSON escape sequences (LaTeX: \frac, \sqrt, \text, etc.)
+      //    Valid JSON escapes are: \" \\ \/ \b \f \n \r \t \uXXXX
+      s = s.replace(/\\(?!["\\/bfnrtu\\])/g, '\\\\');
+      // 3. Remove control characters (except \n \r \t)
+      s = s.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '');
+      return s;
+  },
+
+  /**
+   * Clean body content: normalize paragraph separators, fix over-escaped LaTeX.
+   */
+  _sanitizeBody: (body: string): string => {
+      if (!body) return '';
+      let clean = body;
+      // Normalize all paragraph separator variants: */* */\* */\\*
+      clean = clean.replace(/\*\/\\{0,4}\*/g, '\n\n');
+      // Collapse over-escaped LaTeX: \\\\frac → \\frac
+      clean = clean.replace(/\\{3,}(?=[a-zA-Z{])/g, '\\');
+      // Trim excess blank lines
+      clean = clean.replace(/\n{3,}/g, '\n\n');
+      return clean.trim();
+  },
+
+  /**
+   * Attempt to rescue usable content from a failed_generation error.
+   * Returns a Message if successful, null otherwise.
+   */
+  _rescueFromError: (errorText: string): Message | null => {
+      try {
+          console.log("ChatService._rescueFromError: Attempting rescue...");
+
+          // ── Step 1: Get the error content string ──
+          let errorContent = errorText;
+          try {
+              const parsed = JSON.parse(errorText);
+              if (parsed.detail) {
+                  errorContent = typeof parsed.detail === 'string'
+                      ? parsed.detail
+                      : JSON.stringify(parsed.detail);
+              } else if (parsed.error?.message) {
+                  errorContent = parsed.error.message;
+              }
+          } catch (_) { /* raw text */ }
+
+          if (!errorContent.includes('failed_generation')) return null;
+
+          // ── Step 2: Extract JSON via brace-matching ──
+          const fgIndex = errorContent.indexOf('failed_generation');
+          if (fgIndex === -1) return null;
+
+          const afterFg = errorContent.substring(fgIndex);
+          const firstBrace = afterFg.indexOf('{');
+          if (firstBrace === -1) return null;
+
+          const startPos = fgIndex + firstBrace;
+          let braceCount = 0;
+          let endPos = startPos;
+
+          for (let i = startPos; i < errorContent.length; i++) {
+              const ch = errorContent[i];
+              if (ch === '\\' && i + 1 < errorContent.length) { i++; continue; }
+              if (ch === '{') braceCount++;
+              else if (ch === '}') braceCount--;
+              if (braceCount === 0) { endPos = i + 1; break; }
+          }
+
+          if (braceCount !== 0) {
+              console.warn("ChatService._rescueFromError: Brace matching failed");
+              return null;
+          }
+
+          const candidateJson = errorContent.substring(startPos, endPos);
+
+          // ── Step 3: Sanitize and parse with fallbacks ──
+          let obj: any = null;
+
+          // Attempt 1: Sanitize then parse
+          try {
+              obj = JSON.parse(ChatService._sanitizeJsonString(candidateJson));
+          } catch (_) {
+              // Attempt 2: More aggressive — collapse ALL multi-backslashes first
+              try {
+                  let fixed = candidateJson.replace(/\\{2,}/g, '\\\\');
+                  fixed = fixed.replace(/\\(?!["\\/bfnrtu\\])/g, '\\\\');
+                  fixed = fixed.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '');
+                  obj = JSON.parse(fixed);
+              } catch (_) {
+                  // Attempt 3: Extract just the "arguments" sub-object
+                  try {
+                      const am = candidateJson.match(/"arguments"\s*:\s*\{/);
+                      if (am && am.index !== undefined) {
+                          const s = am.index + am[0].length - 1;
+                          let bc2 = 0, e = s;
+                          for (let j = s; j < candidateJson.length; j++) {
+                              if (candidateJson[j] === '\\' && j + 1 < candidateJson.length) { j++; continue; }
+                              if (candidateJson[j] === '{') bc2++;
+                              else if (candidateJson[j] === '}') bc2--;
+                              if (bc2 === 0) { e = j + 1; break; }
+                          }
+                          obj = JSON.parse(ChatService._sanitizeJsonString(candidateJson.substring(s, e)));
+                      }
+                  } catch (_) {
+                      console.error("ChatService._rescueFromError: All parse strategies failed");
+                      return null;
+                  }
+              }
+          }
+
+          if (!obj) return null;
+
+          // ── Step 4: Unwrap tool-call wrapper ──
+          if (obj.name && obj.arguments) {
+              obj = typeof obj.arguments === 'object'
+                  ? obj.arguments
+                  : (() => { try { return JSON.parse(ChatService._sanitizeJsonString(obj.arguments)); } catch (_) { return obj; } })();
+          }
+
+          // Unwrap structured_output
+          if (obj.structured_output && typeof obj.structured_output === 'object') {
+              obj = obj.structured_output;
+          }
+
+          // ── Step 5: Build rescued message ──
+          const rawBody = typeof obj.body === 'string' ? obj.body : '';
+          const cleanBody = ChatService._sanitizeBody(rawBody);
+
+          console.log("ChatService._rescueFromError: SUCCESS! Title:", obj.title);
+
+          return {
+              id: `rescue_${Date.now()}`,
+              role: 'ai',
+              content: cleanBody || "Content recovered.",
+              title: obj.title,
+              body: rawBody,
+              links: obj.links,
+              manim_video_path: obj.manim_video_path,
+              Need_of_manim: obj.Need_of_manim,
+              next_related_topic: obj.next_related_topic,
+              next_questions: obj.next_questions,
+              animate: true,
+          };
+      } catch (err) {
+          console.error("ChatService._rescueFromError: Unexpected error:", err);
+          return null;
+      }
+  },
+
   // --- Helper for Deduplication ---
   appendAIResponse: (messages: Message[], newAiMsg: Message) => {
-      // Check last few messages for duplication to avoid re-rendering same answer
-      // We look at the last 3 messages to be safe (User, AI, maybe another?)
       const recentMessages = messages.slice(-3);
-      
       const exists = recentMessages.some((m: Message) => {
           if (m.role !== 'ai') return false;
-          // Compare content roughly
           const c1 = (m.content || m.body || '').trim();
           const c2 = (newAiMsg.content || newAiMsg.body || '').trim();
           return c1 === c2 && c1.length > 0;
