@@ -1,4 +1,6 @@
-import React, { useMemo } from 'react';
+import { Ionicons } from "@expo/vector-icons";
+import { ResizeMode, Video } from "expo-av";
+import React, { useMemo } from "react";
 import {
   FlatList,
   Linking,
@@ -7,18 +9,17 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from 'react-native';
-import { Video, ResizeMode } from 'expo-av';
+} from "react-native";
 
-import { parseBody, ParsedParagraph, Segment } from '@/utils/parseBody';
-import CodeBlock from '@/components/CodeBlock';
-import FormulaBlock from '@/components/FormulaBlock';
+import CodeBlock from "@/components/CodeBlock";
+import FormulaBlock from "@/components/FormulaBlock";
+import { parseBody, ParsedParagraph, Segment } from "@/utils/parseBody";
 
 export type StructuredOutput = {
   title: string;
   body: string;
   links: string[];
-  Need_of_manim: 'YES' | 'NO';
+  Need_of_manim: "YES" | "NO";
   manim_video_path: string;
   next_related_topic: string[];
   next_questions: string[];
@@ -41,17 +42,17 @@ export default function EducationalResponseScreen({
   );
 
   const hasVideo =
-    structuredOutput.Need_of_manim === 'YES' &&
-    typeof structuredOutput.manim_video_path === 'string' &&
-    structuredOutput.manim_video_path.startsWith('http');
+    structuredOutput.Need_of_manim === "YES" &&
+    typeof structuredOutput.manim_video_path === "string" &&
+    structuredOutput.manim_video_path.startsWith("http");
 
   const renderSegment = (segment: Segment, index: number) => {
     switch (segment.type) {
-      case 'code':
+      case "code":
         return <CodeBlock key={index} code={segment.content} />;
-      case 'formula':
+      case "formula":
         return <FormulaBlock key={index} formula={segment.content} />;
-      case 'text':
+      case "text":
       default:
         if (!segment.content.trim()) return null;
         return (
@@ -62,7 +63,13 @@ export default function EducationalResponseScreen({
     }
   };
 
-  const renderParagraph = ({ item, index }: { item: ParsedParagraph; index: number }) => {
+  const renderParagraph = ({
+    item,
+    index,
+  }: {
+    item: ParsedParagraph;
+    index: number;
+  }) => {
     if (!item.segments.length) return null;
     return (
       <View key={index} style={styles.paragraph}>
@@ -121,6 +128,12 @@ export default function EducationalResponseScreen({
                   style={styles.topicChip}
                   onPress={() => onRelatedTopicPress?.(topic)}
                 >
+                  <Ionicons
+                    name="school-outline"
+                    size={14}
+                    color="#4338CA"
+                    style={{ marginRight: 6 }}
+                  />
                   <Text style={styles.topicChipText}>{topic}</Text>
                 </TouchableOpacity>
               ))}
@@ -128,22 +141,29 @@ export default function EducationalResponseScreen({
           </View>
         )}
 
-      {structuredOutput.next_questions && structuredOutput.next_questions.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Next Questions</Text>
-          <View style={styles.chipRow}>
-            {structuredOutput.next_questions.map((q) => (
-              <TouchableOpacity
-                key={q}
-                style={styles.questionChip}
-                onPress={() => onFollowUpQuestionPress?.(q)}
-              >
-                <Text style={styles.questionChipText}>{q}</Text>
-              </TouchableOpacity>
-            ))}
+      {structuredOutput.next_questions &&
+        structuredOutput.next_questions.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Next Questions</Text>
+            <View style={styles.chipRow}>
+              {structuredOutput.next_questions.map((q) => (
+                <TouchableOpacity
+                  key={q}
+                  style={styles.questionChip}
+                  onPress={() => onFollowUpQuestionPress?.(q)}
+                >
+                  <Ionicons
+                    name="help-circle-outline"
+                    size={14}
+                    color="#0F766E"
+                    style={{ marginRight: 6 }}
+                  />
+                  <Text style={styles.questionChipText}>{q}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
-        </View>
-      )}
+        )}
     </View>
   );
 
@@ -179,20 +199,20 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: '700',
-    color: '#111827',
+    fontWeight: "700",
+    color: "#111827",
     marginBottom: 12,
   },
   videoContainer: {
-    width: '100%',
+    width: "100%",
     aspectRatio: 16 / 9,
     borderRadius: 12,
-    overflow: 'hidden',
-    backgroundColor: '#000',
+    overflow: "hidden",
+    backgroundColor: "#000",
   },
   video: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   paragraph: {
     marginBottom: 12,
@@ -200,7 +220,7 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 15,
     lineHeight: 22,
-    color: '#1F2937',
+    color: "#1F2937",
   },
   footerContainer: {
     marginTop: 16,
@@ -210,10 +230,10 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#4B5563',
+    fontWeight: "600",
+    color: "#4B5563",
     marginBottom: 8,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 0.6,
   },
   linkButton: {
@@ -221,43 +241,46 @@ const styles = StyleSheet.create({
   },
   linkText: {
     fontSize: 14,
-    color: '#2563EB',
-    textDecorationLine: 'underline',
+    color: "#2563EB",
+    textDecorationLine: "underline",
   },
   chipRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     marginHorizontal: -4,
   },
   topicChip: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 999,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: "#EEF2FF",
     borderWidth: 1,
-    borderColor: '#C7D2FE',
+    borderColor: "#C7D2FE",
     marginHorizontal: 4,
     marginVertical: 4,
+    flexDirection: "row",
+    alignItems: "center",
   },
   topicChipText: {
     fontSize: 13,
-    color: '#4338CA',
-    fontWeight: '500',
+    color: "#4338CA",
+    fontWeight: "500",
   },
   questionChip: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 999,
-    backgroundColor: '#ECFEFF',
+    backgroundColor: "#ECFEFF",
     borderWidth: 1,
-    borderColor: '#A5F3FC',
+    borderColor: "#A5F3FC",
     marginHorizontal: 4,
     marginVertical: 4,
+    flexDirection: "row",
+    alignItems: "center",
   },
   questionChipText: {
     fontSize: 13,
-    color: '#0F766E',
-    fontWeight: '500',
+    color: "#0F766E",
+    fontWeight: "500",
   },
 });
-
