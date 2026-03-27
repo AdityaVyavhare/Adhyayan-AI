@@ -1,0 +1,1132 @@
+================================================================================
+ADHYAYAN AI - COMPLETE API DOCUMENTATION
+================================================================================
+
+BASE URL: https://your-backend.ngrok-free.app
+TEST GENERATION BASE URL: https://llmquestionansweringreasoning.onrender.com
+
+Note: Replace BASE_URL with your actual backend URL configured in Config.ts
+
+
+================================================================================
+FEATURE 1: CHAT MODEL (AI ASSISTANT)
+================================================================================
+
+1.1 GET USER CHATS
+------------------
+Endpoint: GET /feature1_get_user_chats/{user_id}
+Method: GET
+Headers: 
+  Content-Type: application/json
+
+URL Parameters:
+  - user_id (string, required): User's email or unique identifier
+
+Request Example:
+GET https://your-backend.ngrok-free.app/feature1_get_user_chats/vyavhareaditya11@gmail.com
+
+Response Format:
+{
+  "working": true,
+  "user_id": "vyavhareaditya11@gmail.com",
+  "total_chats": 30,
+  "chats": [
+    {
+      "chat_id": "chat_1770789447538",
+      "thread_id": "vyavhareaditya11@gmail.com_chat_1770789447538",
+      "title": "Physics Doubt",
+      "updated_at": "2026-02-11T10:30:00Z"
+    }
+  ]
+}
+
+Response Fields:
+  - working (boolean): API status indicator
+  - user_id (string): User identifier
+  - total_chats (integer): Total number of chats
+  - chats (array): List of chat sessions
+    - chat_id (string): Unique chat identifier
+    - thread_id (string): Thread identifier for conversation continuity
+    - title (string, optional): Chat title
+    - updated_at (string, optional): Last update timestamp
+
+
+1.2 GET CONVERSATION HISTORY
+-----------------------------
+Endpoint: POST /feature1_get_conversation
+Method: POST
+Headers:
+  Content-Type: application/json
+
+Request Body:
+{
+  "user_id": "vyavhareaditya11@gmail.com",
+  "chat_id": "chat_1770789447538",
+  "thread_id": "vyavhareaditya11@gmail.com_chat_1770789447538"
+}
+
+Request Parameters:
+  - user_id (string, required): User's email
+  - chat_id (string, required): Chat session ID
+  - thread_id (string, optional): Thread ID for continuity
+
+Response Format:
+{
+  "working": {
+    "messages": [
+      {
+        "type": "human",
+        "content": "Explain Newton's laws"
+      },
+      {
+        "type": "ai",
+        "content": "{\"title\": \"Newton's Laws of Motion\", \"body\": \"...\", \"links\": [], \"next_questions\": []}"
+      }
+    ]
+  }
+}
+
+Response Fields:
+  - working.messages (array): List of conversation messages
+    - type (string): "human", "ai", or "system"
+    - content (string): Message content (AI messages may be JSON structured)
+
+
+1.3 SEND MESSAGE
+----------------
+Endpoint: POST /chat
+Method: POST
+Headers:
+  Content-Type: application/json
+
+Request Body:
+{
+  "user_id": "vyavhareaditya11@gmail.com",
+  "chat_id": "chat_1770789447538",
+  "message": "What is photosynthesis?",
+  "thread_id": "vyavhareaditya11@gmail.com_chat_1770789447538"
+}
+
+Request Parameters:
+  - user_id (string, required): User's email
+  - chat_id (string, required): Chat session ID
+  - message (string, required): User's question/message
+  - thread_id (string, optional): Thread ID for continuity
+
+Response Format:
+{
+  "working": {
+    "messages": [
+      {
+        "type": "human",
+        "content": "What is photosynthesis?"
+      },
+      {
+        "type": "ai",
+        "content": "{\"title\": \"Photosynthesis Explained\", \"body\": \"Photosynthesis is...*/*Plants use...\", \"links\": [\"https://example.com\"], \"next_questions\": [\"How do plants absorb sunlight?\"]}"
+      }
+    ]
+  },
+  "latest_answer": {
+    "title": "Photosynthesis Explained",
+    "body": "Photosynthesis is...*/*Plants use...",
+    "links": ["https://example.com"],
+    "next_questions": ["How do plants absorb sunlight?"],
+    "Need_of_manim": "No",
+    "manim_video_path": "/path/demo.mp4"
+  }
+}
+
+Response Fields:
+  - working.messages (array): Complete conversation history
+  - latest_answer (object): Most recent AI response details
+    - title (string): Response title
+    - body (string): Main content (paragraphs separated by */*)
+    - links (array): Reference URLs
+    - next_questions (array): Suggested follow-up questions
+    - Need_of_manim (string): "Yes" or "No" for animation
+    - manim_video_path (string): Path to animation video
+
+
+1.4 DELETE CHAT
+---------------
+Endpoint: POST /feature1_delete_chat
+Method: POST
+Headers:
+  Content-Type: application/json
+
+Request Body:
+{
+  "user_id": "vyavhareaditya11@gmail.com",
+  "chat_id": "chat_1770789447538"
+}
+
+Response: HTTP 200 OK if successful
+
+
+================================================================================
+FEATURE 2: OCR DOUBT SOLVER (SCAN QUESTION)
+================================================================================
+
+2.1 GET SCAN CHATS
+------------------
+Endpoint: POST /feature2_get_chats
+Method: POST
+Headers:
+  Content-Type: application/json
+
+Request Body:
+{
+  "user_id": "vyavhareaditya11@gmail.com"
+}
+
+Response Format:
+{
+  "chats": [
+    {
+      "chat_id": "scan_1770789447538",
+      "message_count": 5,
+      "image_count": 3,
+      "last_updated": "2026-02-11T10:30:00Z"
+    }
+  ]
+}
+
+
+2.2 GET SCAN CONVERSATION
+-------------------------
+Endpoint: POST /feature2_get_chat_history
+Method: POST
+Headers:
+  Content-Type: application/json
+
+Request Body:
+{
+  "user_id": "vyavhareaditya11@gmail.com",
+  "chat_id": "scan_1770789447538"
+}
+
+Response Format:
+{
+  "messages": [
+    {
+      "type": "human",
+      "content": "Solve this equation"
+    },
+    {
+      "type": "ai",
+      "content": "The solution is x = 5"
+    }
+  ],
+  "images": [
+    {
+      "image_url": "https://storage.example.com/img1.jpg",
+      "timestamp": "2026-02-11T10:30:00Z"
+    }
+  ]
+}
+
+
+2.3 SCAN AND SOLVE QUESTION
+----------------------------
+Endpoint: POST /ocr_doubt_solver
+Method: POST
+Headers:
+  Content-Type: application/json
+
+Request Body:
+{
+  "user_id": "vyavhareaditya11@gmail.com",
+  "chat_id": "scan_1770789447538",
+  "image_url": "https://storage.example.com/question.jpg",
+  "message": "Solve this problem"
+}
+
+Request Parameters:
+  - user_id (string, required): User's email
+  - chat_id (string, required): Chat session ID
+  - image_url (string, required): URL of uploaded question image
+  - message (string, optional): Additional context or question
+
+Response Format:
+{
+  "messages": [
+    {
+      "type": "human",
+      "content": "Solve this problem"
+    },
+    {
+      "type": "ai",
+      "content": "Solution: Step 1..."
+    }
+  ],
+  "latest_answer": {
+    "answer": "Solution: Step 1...",
+    "referenced_images": ["https://storage.example.com/question.jpg"]
+  }
+}
+
+
+2.4 DELETE SCAN CHAT
+--------------------
+Endpoint: POST /feature2_delete_chat
+Method: POST
+Headers:
+  Content-Type: application/json
+
+Request Body:
+{
+  "user_id": "vyavhareaditya11@gmail.com",
+  "chat_id": "scan_1770789447538"
+}
+
+Response: HTTP 200 OK if successful
+
+
+================================================================================
+FEATURE 3: PDF UPLOAD & ANALYSIS
+================================================================================
+
+3.1 GET PDF CHATS
+-----------------
+Endpoint: POST /get_user_chats
+Method: POST
+Headers:
+  Content-Type: application/json
+
+Request Body:
+{
+  "user_id": "vyavhareaditya11@gmail.com"
+}
+
+Response Format:
+{
+  "chats": [
+    {
+      "chat_id": "pdf_chat_1770452894959",
+      "thread_id": "vyavhareaditya11@gmail.com_pdf_chat_1770452894959",
+      "title": "Physics Textbook Chapter 3",
+      "created_at": "2026-02-10T14:20:00Z",
+      "pdf_url": "https://storage.example.com/physics.pdf"
+    }
+  ]
+}
+
+
+3.2 GET PDF CONVERSATION
+------------------------
+Endpoint: POST /get_conversation
+Method: POST
+Headers:
+  Content-Type: application/json
+
+Request Body:
+{
+  "user_id": "vyavhareaditya11@gmail.com",
+  "chat_id": "pdf_chat_1770452894959",
+  "thread_id": "vyavhareaditya11@gmail.com_pdf_chat_1770452894959"
+}
+
+Response Format:
+{
+  "messages": [
+    {
+      "type": "human",
+      "content": "Summarize page 5"
+    },
+    {
+      "type": "ai",
+      "content": "Page 5 discusses..."
+    }
+  ]
+}
+
+
+3.3 INGEST PDF
+--------------
+Endpoint: POST /pdf_ingest
+Method: POST
+Headers:
+  Content-Type: application/json
+
+Request Body:
+{
+  "user_id": "vyavhareaditya11@gmail.com",
+  "chat_id": "pdf_chat_1770452894959",
+  "pdf_url": "https://storage.example.com/physics.pdf",
+  "message": "Analyze this PDF"
+}
+
+Request Parameters:
+  - user_id (string, required): User's email
+  - chat_id (string, required): Chat session ID
+  - pdf_url (string, required): URL of uploaded PDF
+  - message (string, optional): Initial question about PDF
+
+Response Format:
+{
+  "messages": [
+    {
+      "type": "ai",
+      "content": "PDF analyzed successfully. Ask me anything!"
+    }
+  ],
+  "latest_answer": {
+    "title": "PDF Analysis Complete",
+    "body": "This document contains...*/*Key topics include...",
+    "pages": [1, 2, 3, 5],
+    "youtube_links": ["https://youtube.com/watch?v=example"],
+    "next_related_topic": ["Quantum Mechanics", "Thermodynamics"],
+    "next_questions": ["What is covered in Chapter 2?"]
+  }
+}
+
+Response Fields:
+  - latest_answer.pages (array): Referenced page numbers
+  - latest_answer.youtube_links (array): Recommended video resources
+
+
+3.4 DELETE PDF CHAT
+-------------------
+Endpoint: POST /delete_chat
+Method: POST
+Headers:
+  Content-Type: application/json
+
+Request Body:
+{
+  "user_id": "vyavhareaditya11@gmail.com",
+  "chat_id": "pdf_chat_1770452894959"
+}
+
+Response: HTTP 200 OK if successful
+
+
+================================================================================
+FEATURE 5: YOUTUBE VIDEO LEARNING
+================================================================================
+
+5.1 GET VIDEO CHATS
+-------------------
+Endpoint: POST /feature5_get_chats
+Method: POST
+Headers:
+  Content-Type: application/json
+
+Request Body:
+{
+  "user_id": "vyavhareaditya11@gmail.com"
+}
+
+Response Format:
+{
+  "chats": [
+    {
+      "chat_id": "yt_1770789447538",
+      "title": "MIT Physics Lecture",
+      "youtube_url": "https://youtube.com/watch?v=abc123",
+      "summary": "This lecture covers...",
+      "last_updated": "2026-02-11T10:30:00Z"
+    }
+  ]
+}
+
+
+5.2 GET VIDEO CHAT HISTORY
+---------------------------
+Endpoint: POST /feature5_get_chat_history
+Method: POST
+Headers:
+  Content-Type: application/json
+
+Request Body:
+{
+  "user_id": "vyavhareaditya11@gmail.com",
+  "chat_id": "yt_1770789447538"
+}
+
+Response Format:
+{
+  "messages": [
+    {
+      "type": "human",
+      "content": "What did they say at 5:30?"
+    },
+    {
+      "type": "ai",
+      "content": "At 5:30, the professor explains..."
+    }
+  ]
+}
+
+
+5.3 ANALYZE YOUTUBE VIDEO
+--------------------------
+Endpoint: POST /video_rag
+Method: POST
+Headers:
+  Content-Type: application/json
+
+Request Body:
+{
+  "user_id": "vyavhareaditya11@gmail.com",
+  "chat_id": "yt_1770789447538",
+  "youtube_url": "https://youtube.com/watch?v=abc123",
+  "message": "Summarize this video"
+}
+
+Request Parameters:
+  - user_id (string, required): User's email
+  - chat_id (string, required): Chat session ID
+  - youtube_url (string, required): YouTube video URL
+  - message (string, optional): Initial question about video
+
+Response Format:
+{
+  "messages": [
+    {
+      "type": "ai",
+      "content": "This video is about..."
+    }
+  ],
+  "latest_answer": {
+    "title": "Video Summary",
+    "answer": "This MIT lecture covers quantum mechanics...*/*Key concepts include...",
+    "body": "This MIT lecture covers quantum mechanics...",
+    "timestamps": ["00:00", "05:30", "12:45", "18:20"],
+    "youtube_links": ["https://youtube.com/watch?v=related1"],
+    "next_related_topic": ["Quantum Entanglement"],
+    "next_questions": ["What is superposition?"]
+  }
+}
+
+Response Fields:
+  - latest_answer.timestamps (array): Key moment timestamps in "MM:SS" format
+  - latest_answer.answer or body: Video analysis content
+
+
+5.4 DELETE VIDEO CHAT
+----------------------
+Endpoint: POST /feature5_delete_chat
+Method: POST
+Headers:
+  Content-Type: application/json
+
+Request Body:
+{
+  "user_id": "vyavhareaditya11@gmail.com",
+  "chat_id": "yt_1770789447538"
+}
+
+Response: HTTP 200 OK if successful
+
+
+================================================================================
+FEATURE 7: PODCAST GENERATOR
+================================================================================
+
+7.1 GET PODCAST CHATS
+---------------------
+Endpoint: POST /feature7_get_chats
+Method: POST
+Headers:
+  Content-Type: application/json
+
+Request Body:
+{
+  "user_id": "vyavhareaditya11@gmail.com"
+}
+
+Response Format:
+{
+  "chats": [
+    {
+      "chat_id": "podcast_1770794335821",
+      "podcast_count": 3,
+      "last_updated": "2026-02-11T10:30:00Z"
+    }
+  ]
+}
+
+
+7.2 GET PODCAST HISTORY
+-----------------------
+Endpoint: POST /feature7_get_chat_history
+Method: POST
+Headers:
+  Content-Type: application/json
+
+Request Body:
+{
+  "user_id": "vyavhareaditya11@gmail.com",
+  "chat_id": "podcast_1770794335821"
+}
+
+Response Format:
+{
+  "podcasts": [
+    {
+      "topic": "Indian Politics",
+      "title": "Podcast Script: Understanding Indian Politics",
+      "script": "Welcome to India Unpacked...",
+      "created_at": "2026-02-11T10:30:00Z"
+    }
+  ]
+}
+
+
+7.3 GENERATE PODCAST
+--------------------
+Endpoint: POST /podcast_generate
+Method: POST
+Headers:
+  Content-Type: application/json
+
+Request Body:
+{
+  "user_id": "vyavhareaditya11@gmail.com",
+  "chat_id": "podcast_1770794335821",
+  "topic": "Indian Politics"
+}
+
+Request Parameters:
+  - user_id (string, required): User's email
+  - chat_id (string, required): Chat session ID
+  - topic (string, required): Podcast topic
+
+Response Format:
+{
+  "title": "Podcast Script: Understanding Indian Politics",
+  "body": "Welcome to India Unpacked, the podcast where we break down...*/*First, a quick historical snapshot...",
+  "links": ["https://en.wikipedia.org/wiki/Politics_of_India"],
+  "Need_of_manim": "No",
+  "manim_video_path": "/path/demo.mp4",
+  "next_related_topic": ["Indian Constitution", "Electoral System in India"],
+  "next_questions": ["How does the Indian parliamentary system work?"]
+}
+
+
+7.4 DELETE PODCAST CHAT
+-----------------------
+Endpoint: POST /feature7_delete_chat
+Method: POST
+Headers:
+  Content-Type: application/json
+
+Request Body:
+{
+  "user_id": "vyavhareaditya11@gmail.com",
+  "chat_id": "podcast_1770794335821"
+}
+
+Response: HTTP 200 OK if successful
+
+
+================================================================================
+FEATURE 8: GITA COUNSELOR (SARTHI)
+================================================================================
+
+8.1 GET GITA COUNSELING CHATS
+------------------------------
+Endpoint: POST /feature8_get_chats
+Method: POST
+Headers:
+  Content-Type: application/json
+
+Request Body:
+{
+  "user_id": "vyavhareaditya11@gmail.com"
+}
+
+Response Format:
+{
+  "user_id": "vyavhareaditya11@gmail.com",
+  "chats": [
+    {
+      "chat_id": "gita_1770792536605",
+      "counseling_count": 2,
+      "last_updated": "2026-02-11 06:52:32"
+    }
+  ],
+  "total_chats": 1
+}
+
+
+8.2 GET GITA COUNSELING HISTORY
+--------------------------------
+Endpoint: POST /feature8_get_chat_history
+Method: POST
+Headers:
+  Content-Type: application/json
+
+Request Body:
+{
+  "user_id": "vyavhareaditya11@gmail.com",
+  "chat_id": "gita_1770792536605"
+}
+
+Response Format:
+{
+  "counselings": [
+    {
+      "doubt": "I am feeling lost in life",
+      "guidance": "Dear friend, I see your pain...",
+      "referenced_shlokas": [
+        {
+          "chapter": 2,
+          "verse": 47,
+          "sanskrit_text": "कर्मण्येवाधिकारस्ते मा फलेषु कदाचन।",
+          "transliteration": "karmanye vadhikaraste ma phaleshu kadachana",
+          "meaning_english": "You have a right to perform your duty...",
+          "meaning_hindi": "तुम्हारा अधिकार केवल कर्म में है..."
+        }
+      ],
+      "created_at": "2026-02-11T06:52:32Z"
+    }
+  ]
+}
+
+
+8.3 GET GITA COUNSELING
+-----------------------
+Endpoint: POST /gita_counseling
+Method: POST
+Headers:
+  Content-Type: application/json
+
+Request Body:
+{
+  "user_id": "vyavhareaditya11@gmail.com",
+  "chat_id": "gita_1770792536605",
+  "doubt": "I am feeling depressed and hungry",
+  "preferred_language": "english"
+}
+
+Request Parameters:
+  - user_id (string, required): User's email
+  - chat_id (string, required): Chat session ID
+  - doubt (string, required): User's life question or concern
+  - preferred_language (string, optional): "english" or "hindi" (default: "english")
+
+Response Format:
+{
+  "user_id": "vyavhareaditya11@gmail.com",
+  "chat_id": "gita_1770795023118",
+  "language": "english",
+  "audio_url": "https://storage.example.com/gita_audio/audio.mp3",
+  "guidance": "Dear friend, I see your pain, your hunger, and your depression...",
+  "referenced_shlokas": [
+    {
+      "chapter": 6,
+      "verse": 16,
+      "sanskrit_text": "युक्ताहारविहारस्य युक्तचेष्टस्य कर्मसु।",
+      "transliteration": "yuktahara-viharasya yukta-ceshtasya karmasu",
+      "meaning_english": "O Arjuna, yoga is not for those who eat too much...",
+      "meaning_hindi": "हे अर्जुन, योग उसके लिए नहीं है जो अधिक खाता है..."
+    },
+    {
+      "chapter": 17,
+      "verse": 8,
+      "sanskrit_text": "आयुःसत्त्वबलारोग्यसुखप्रीतिविवर्धनाः।",
+      "transliteration": "ayuh-sattva-balarogya-sukha-priti-vivardhanah",
+      "meaning_english": "Foods in the mode of goodness increase the duration of life...",
+      "meaning_hindi": "सात्त्विक भोजन आयु, शक्ति और स्वास्थ्य बढ़ाता है..."
+    }
+  ],
+  "life_examples": [
+    "We compare our lives on social media, feeling inadequate and empty.",
+    "We work remotely, blurring the lines between work and life..."
+  ],
+  "key_teachings": [
+    "By nurturing his relationships and building a network...",
+    "Practice gratitude by writing down three things..."
+  ]
+}
+
+Response Fields:
+  - audio_url (string): MP3 URL of audio guidance
+  - guidance (string): Full counseling text
+  - referenced_shlokas (array): Relevant Bhagavad Gita verses
+    - chapter (integer): Chapter number
+    - verse (integer): Verse number
+    - sanskrit_text (string): Original Sanskrit text
+    - transliteration (string): Roman script transliteration
+    - meaning_english (string): English translation
+    - meaning_hindi (string): Hindi translation
+  - life_examples (array): Modern life examples
+  - key_teachings (array): Key takeaways
+
+
+8.4 DELETE GITA COUNSELING CHAT
+--------------------------------
+Endpoint: POST /feature8_delete_chat
+Method: POST
+Headers:
+  Content-Type: application/json
+
+Request Body:
+{
+  "user_id": "vyavhareaditya11@gmail.com",
+  "chat_id": "gita_1770792536605"
+}
+
+Response: HTTP 200 OK if successful
+
+
+================================================================================
+FEATURE 9: TEST GENERATOR
+================================================================================
+Note: This feature uses a different base URL
+
+9.1 GENERATE TEST
+-----------------
+Endpoint: POST /test/generate
+Base URL: https://llmquestionansweringreasoning.onrender.com
+Method: POST
+Headers:
+  Content-Type: application/json
+
+Request Body:
+{
+  "topic": "Newton's Laws of Motion",
+  "difficulty": "medium",
+  "number_of_questions": 10,
+  "question_types": ["mcq", "true_false", "short_answer"],
+  "user_id": "vyavhareaditya11@gmail.com"
+}
+
+Request Parameters:
+  - topic (string, required): Test topic/subject
+  - difficulty (string, required): "easy", "medium", or "hard"
+  - number_of_questions (integer, required): Number of questions (1-50)
+  - question_types (array, required): Question types ["mcq", "true_false", "short_answer", "long_answer"]
+  - user_id (string, optional): User identifier for logging
+
+Response Format:
+{
+  "test_id": "test_1770795023118",
+  "topic": "Newton's Laws of Motion",
+  "difficulty": "medium",
+  "questions": [
+    {
+      "question_id": "q1",
+      "type": "mcq",
+      "question": "What is Newton's First Law?",
+      "options": [
+        "Law of Inertia",
+        "F = ma",
+        "Action-Reaction",
+        "Conservation of Energy"
+      ],
+      "correct_answer": "Law of Inertia",
+      "marks": 1
+    },
+    {
+      "question_id": "q2",
+      "type": "true_false",
+      "question": "Newton's Third Law states that every action has an equal and opposite reaction.",
+      "correct_answer": true,
+      "marks": 1
+    },
+    {
+      "question_id": "q3",
+      "type": "short_answer",
+      "question": "Explain Newton's Second Law in your own words.",
+      "sample_answer": "Newton's Second Law states that force equals mass times acceleration...",
+      "marks": 3
+    }
+  ],
+  "total_marks": 10
+}
+
+
+9.2 EVALUATE TEST
+-----------------
+Endpoint: POST /test/evaluate
+Base URL: https://llmquestionansweringreasoning.onrender.com
+Method: POST
+Headers:
+  Content-Type: application/json
+
+Request Body:
+{
+  "test_id": "test_1770795023118",
+  "student_answers": [
+    {
+      "question_id": "q1",
+      "answer": "Law of Inertia"
+    },
+    {
+      "question_id": "q2",
+      "answer": true
+    },
+    {
+      "question_id": "q3",
+      "answer": "Force equals mass times acceleration, meaning heavier objects need more force to move."
+    }
+  ]
+}
+
+Request Parameters:
+  - test_id (string, required): Test ID from generate endpoint
+  - student_answers (array, required): List of student answers
+    - question_id (string, required): Question identifier
+    - answer (string/boolean/number): Student's answer
+
+Response Format:
+{
+  "test_id": "test_1770795023118",
+  "total_marks": 10,
+  "marks_obtained": 8,
+  "percentage": 80,
+  "results": [
+    {
+      "question_id": "q1",
+      "is_correct": true,
+      "marks_obtained": 1,
+      "total_marks": 1,
+      "feedback": "Correct!"
+    },
+    {
+      "question_id": "q2",
+      "is_correct": true,
+      "marks_obtained": 1,
+      "total_marks": 1,
+      "feedback": "Correct!"
+    },
+    {
+      "question_id": "q3",
+      "is_correct": true,
+      "marks_obtained": 2,
+      "total_marks": 3,
+      "feedback": "Good explanation, but could include more detail about the mathematical relationship."
+    }
+  ],
+  "overall_feedback": "Well done! You have a solid understanding of Newton's Laws."
+}
+
+
+================================================================================
+COMMON RESPONSE PATTERNS
+================================================================================
+
+SUCCESS RESPONSE STRUCTURE
+---------------------------
+Most endpoints follow this pattern:
+
+{
+  "working": true,  // or nested object with data
+  "user_id": "string",
+  "data_field": [...],
+  "latest_answer": {  // For AI responses
+    "title": "string",
+    "body": "string with */* separators",
+    "links": ["url1", "url2"],
+    "next_questions": ["question1", "question2"],
+    "next_related_topic": ["topic1", "topic2"]
+  }
+}
+
+
+ERROR RESPONSE STRUCTURE
+------------------------
+{
+  "detail": "Error message describing what went wrong",
+  "error": {
+    "message": "Detailed error message",
+    "type": "error_type",
+    "code": "error_code"
+  }
+}
+
+HTTP Status Codes:
+- 200: Success
+- 400: Bad Request (invalid parameters)
+- 404: Not Found (resource doesn't exist)
+- 500: Internal Server Error (backend error)
+
+
+CONTENT FORMATTING CONVENTIONS
+-------------------------------
+1. Paragraph Separator: "*/*" 
+   Used in AI responses to separate paragraphs
+   Example: "First paragraph*/*Second paragraph*/*Third paragraph"
+
+2. LaTeX Math:
+   - Inline: $equation$
+   - Block: $$equation$$
+
+3. Code Blocks:
+   - Start: [[CODE]]
+   - End: [[/CODE]]
+
+4. Formula Blocks:
+   - Start: [[FORMULA]]
+   - End: [[/FORMULA]]
+
+
+================================================================================
+AUTHENTICATION & HEADERS
+================================================================================
+
+Currently, the API uses user_id (email) for identification.
+No authentication tokens are required in the current implementation.
+
+Standard Headers for all requests:
+  Content-Type: application/json
+
+Future: May implement Bearer token authentication:
+  Authorization: Bearer <token>
+
+
+================================================================================
+RATE LIMITS & QUOTAS
+================================================================================
+
+Development Environment:
+- No strict rate limits enforced
+- Recommended: Max 60 requests per minute per user
+
+Production Environment:
+- To be defined based on deployment tier
+- Free tier: 10 queries per day
+- Premium tier: Unlimited
+
+
+================================================================================
+ERROR HANDLING BEST PRACTICES
+================================================================================
+
+1. Always check response.ok before parsing JSON
+2. Implement retry logic for 500 errors (max 3 retries)
+3. Parse "failed_generation" errors to extract usable content
+4. Handle network timeouts (recommended: 30 seconds)
+5. Validate user inputs before API calls
+
+
+================================================================================
+CHATBOT INTEGRATION GUIDE
+================================================================================
+
+For AI Chatbot to call these APIs:
+
+1. IDENTIFY INTENT
+   - User asks question → Use Feature 1 (Chat Model)
+   - User uploads image → Use Feature 2 (OCR Solver)
+   - User shares PDF → Use Feature 3 (PDF Ingest)
+   - User shares YouTube link → Use Feature 5 (Video RAG)
+   - User seeks life guidance → Use Feature 8 (Gita Counselor)
+   - User wants podcast → Use Feature 7 (Podcast Generator)
+   - User wants test → Use Feature 9 (Test Generator)
+
+2. EXTRACT PARAMETERS
+   - Always include: user_id
+   - Generate chat_id if new session: `{feature}_{timestamp}`
+   - Extract content: message, topic, youtube_url, pdf_url, image_url
+
+3. MAKE API CALL
+   - Use appropriate endpoint based on intent
+   - Include all required parameters
+   - Set proper headers
+
+4. PARSE RESPONSE
+   - Extract content from `latest_answer` or `messages`
+   - Handle paragraph separators (*/*) 
+   - Render LaTeX math if present
+   - Display links, next_questions for UI
+
+5. ERROR RECOVERY
+   - If 500 error with "failed_generation", parse JSON from error
+   - Extract body, title, links from failed_generation content
+   - Present to user even if API fails
+
+
+EXAMPLE CHATBOT WORKFLOW
+-------------------------
+User: "Explain photosynthesis"
+
+Step 1: Identify Intent → Chat Model (Feature 1)
+Step 2: Extract Parameters
+  - user_id: "user@example.com"
+  - chat_id: "chat_1234567890"
+  - message: "Explain photosynthesis"
+  
+Step 3: Make API Call
+  POST https://your-backend.ngrok-free.app/chat
+  Body: {
+    "user_id": "user@example.com",
+    "chat_id": "chat_1234567890",
+    "message": "Explain photosynthesis"
+  }
+
+Step 4: Parse Response
+  - Extract: latest_answer.title → "Photosynthesis Explained"
+  - Extract: latest_answer.body → Split by */* into paragraphs
+  - Extract: latest_answer.links → Display as references
+  - Extract: latest_answer.next_questions → Show as follow-ups
+
+Step 5: Present to User
+  "# Photosynthesis Explained
+  
+  [Paragraph 1 content]
+  
+  [Paragraph 2 content]
+  
+  References:
+  - [Link 1]
+  - [Link 2]
+  
+  Related Questions:
+  1. [Next Question 1]
+  2. [Next Question 2]"
+
+
+================================================================================
+TESTING ENDPOINTS
+================================================================================
+
+Use tools like:
+- Postman
+- cURL
+- Thunder Client (VS Code)
+- Insomnia
+
+Example cURL command:
+```bash
+curl -X POST https://your-backend.ngrok-free.app/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_id": "test@example.com",
+    "chat_id": "chat_test_123",
+    "message": "What is quantum physics?"
+  }'
+```
+
+
+================================================================================
+CHANGELOG
+================================================================================
+
+Version 1.0.0 (February 11, 2026)
+- Initial API documentation
+- Documented 26 endpoints across 9 features
+- Added chatbot integration guidelines
+- Included error handling best practices
+
+
+================================================================================
+CONTACT & SUPPORT
+================================================================================
+
+For API issues or questions:
+- Check logs in ChatService.ts for response details
+- Verify Config.API_BASE_URL is correctly set
+- Ensure backend server is running and accessible
+
+Backend Repository: [Your backend GitHub repo]
+Frontend Repository: d:\Adhyayan-AI
+
+
+================================================================================
+END OF API DOCUMENTATION
+================================================================================

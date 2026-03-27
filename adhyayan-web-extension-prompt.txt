@@ -1,0 +1,725 @@
+================================================================================
+ADHYAYAN AI - WEB EXTENSION DEVELOPMENT PROMPT
+================================================================================
+
+PROJECT OVERVIEW
+================================================================================
+Create a Chrome/Firefox web extension called "Adhyayan AI - Doubt Clearing Assistant" - a streamlined version of the Adhyayan AI mobile app. This is an AI-powered educational assistant specifically designed for Indian students to clear doubts, learn concepts, and get instant help while browsing or studying online.
+
+
+DESIGN SYSTEM & THEME
+================================================================================
+
+COLOR PALETTE
+-------------
+Light Mode:
+- Primary Blue: #2563EB (blue-600)
+- Background: #F8FAFC (slate-50)
+- Surface/Cards: #FFFFFF
+- Text Primary: #0F172A (slate-900)
+- Text Secondary: #475569 (slate-600)
+- Border: #E2E8F0 (slate-200)
+- Icon Default: #64748B (slate-500)
+- Icon Active: #0F172A (dark slate)
+
+Dark Mode:
+- Primary Blue: #60A5FA (blue-400)
+- Background: #020617 (slate-950)
+- Surface/Cards: #0F172A (slate-900)
+- Text Primary: #F8FAFC (slate-50)
+- Text Secondary: #CBD5E1 (slate-300)
+- Border: #1E293B (slate-800)
+- Icon Default: #94A3B8 (slate-400)
+- Icon Active: #F8FAFC (bright)
+
+
+TYPOGRAPHY
+----------
+- Font Family: System UI stack
+  system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif
+- Headings: Bold, 18-24px
+- Body: Regular, 14-16px
+- Captions: Regular, 12-14px, secondary color
+
+
+SPACING & LAYOUT
+----------------
+- Padding: 12px, 16px, 20px, 24px
+- Border Radius: Cards (12px), Buttons (8px), Chips (16px)
+- Shadows: Subtle elevation - 0 1px 3px rgba(0,0,0,0.12)
+
+
+CORE FEATURES (LIMITED VERSION)
+================================================================================
+
+1. POPUP INTERFACE (320px width)
+---------------------------------
+Main quick-access panel when clicking extension icon:
+
+Header:
+- App logo "Adhyayan AI" with gradient icon
+- User avatar (top-right)
+- Streak counter with fire icon (e.g., "12 Days 🔥")
+
+Quick Actions Grid (2x3):
+1. 📸 Scan Question - Take screenshot of selected text/image
+2. 📄 Upload PDF - Quick PDF upload for analysis
+3. 🎥 Learn from YouTube - Paste YT link for AI summary
+4. 💬 Chat Assistant - Open full chat sidebar
+5. 📚 Gita Counselor - Bhagavad Gita wisdom for guidance
+6. 🎧 Podcast Generator - Convert topic to podcast script
+
+Each action card:
+- Icon (Material Icons style)
+- Label text
+- Colored background tint (purple, blue, red, orange, etc.)
+- Hover effect with slight scale
+
+
+2. SIDE PANEL CHAT INTERFACE
+-----------------------------
+Full AI chat interface that opens in browser side panel:
+
+Layout:
+- Width: 400px
+- Resizable down to 320px
+- Full height of browser window
+
+Components:
+- Header: "Sarthi - Your AI Guide" with minimize/close buttons
+
+- Message Area: 
+  * User messages (right-aligned, blue background)
+  * AI responses (left-aligned, gray background)
+  * TypeWriter effect for AI responses
+  * Support for LaTeX math rendering (KaTeX)
+  * Code block syntax highlighting
+  * Thinking bubble animation during processing
+  
+- Input Bar (Bottom):
+  * Multi-line text input with auto-expand
+  * Microphone icon for voice (optional)
+  * Send button (arrow icon)
+  * Attachment icon for images/PDFs
+  
+- History Drawer:
+  * Slide-in from left
+  * List of past chat sessions
+  * Search/filter chats
+  * Delete chat option
+
+
+3. CONTEXT MENU INTEGRATION
+----------------------------
+Right-click menu options:
+- "Ask Adhyayan AI about this" (on selected text)
+- "Explain this image" (on images)
+- "Summarize this page"
+
+
+4. SCREENSHOT & OCR TOOL
+------------------------
+- Crosshair selection tool for capturing questions from screen
+- OCR text extraction
+- Send directly to AI for explanation
+
+
+5. SETTINGS PAGE
+----------------
+Accessible from popup menu:
+- API key configuration (optional)
+- Theme toggle (Light/Dark/Auto)
+- Language preference
+- Keyboard shortcuts
+- Clear chat history
+
+
+TECHNICAL ARCHITECTURE
+================================================================================
+
+FRONTEND STACK
+--------------
+- Framework: React 18+ with TypeScript
+- Styling: Tailwind CSS (matches the color system above)
+- State Management: Redux Toolkit or Zustand
+- Icons: Lucide React or Material Icons
+- Math Rendering: KaTeX
+- Code Highlighting: Prism.js or Highlight.js
+- Markdown: react-markdown
+- Storage: Chrome Storage API for chat history & settings
+
+
+MANIFEST V3 CONFIGURATION
+-------------------------
+```json
+{
+  "manifest_version": 3,
+  "name": "Adhyayan AI - Doubt Clearing",
+  "version": "1.0.0",
+  "description": "AI-powered doubt clearing assistant for students",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "contextMenus",
+    "sidePanel",
+    "scripting"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "icon128.png"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  }
+}
+```
+
+
+API INTEGRATION
+---------------
+Base URL: https://your-backend.ngrok-free.app (configurable)
+
+Key Endpoints:
+
+1. POST /send_message - Send user query, get AI response
+   Body: { user_id, chat_id, thread_id, prompt, model }
+  
+2. GET /feature1_get_user_chats/{user_id} - Fetch chat history
+  
+3. POST /feature1_get_conversation - Load specific chat thread
+   Body: { user_id, chat_id, thread_id }
+  
+4. POST /upload_pdf - Upload PDF for analysis
+  
+5. POST /ocr_scan - Extract text from image
+  
+6. POST /youtube_learning - Get YouTube video summary
+   Body: { youtube_url, user_id }
+  
+7. POST /gita_counseling - Bhagavad Gita guidance
+   Body: { user_query, user_id }
+
+
+Response Format:
+```json
+{
+  "working": {
+    "message_id": "msg_123",
+    "chat_id": "chat_456",
+    "response": "AI response text...",
+    "links": ["url1", "url2"],
+    "next_questions": ["Q1?", "Q2?"]
+  }
+}
+```
+
+
+UI COMPONENTS SPECIFICATIONS
+================================================================================
+
+CHAT MESSAGE COMPONENT
+----------------------
+```typescript
+interface Message {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: number;
+  links?: string[];
+  isError?: boolean;
+}
+```
+
+Rendering:
+- Parse markdown with bold, italic, lists
+- Render inline math: $...$ with KaTeX
+- Render block math: $$...$$
+- Code blocks with language-specific highlighting
+- Clickable links with external icon
+
+
+QUICK ACTION CARD
+-----------------
+```typescript
+interface QuickAction {
+  icon: string;
+  label: string;
+  color: string;  // hex color for icon
+  bgColor: string;  // light tint background
+  action: () => void;
+}
+```
+
+Style:
+- 140px x 120px card
+- Rounded corners (12px)
+- Icon centered top (32px size)
+- Label below (14px, medium weight)
+- Hover: scale(1.05), shadow increase
+
+
+THINKING BUBBLE ANIMATION
+--------------------------
+Three dots bouncing animation while AI is processing:
+```css
+@keyframes bounce {
+  0%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-10px); }
+}
+```
+
+
+TYPEWRITER EFFECT
+-----------------
+Gradually reveal AI response character by character (50-80ms delay) for natural feel
+
+
+USER FLOWS
+================================================================================
+
+FLOW 1: QUICK DOUBT CLEARING
+-----------------------------
+1. User highlights text on webpage
+2. Right-click → "Ask Adhyayan AI"
+3. Side panel opens with question pre-filled
+4. AI responds with explanation
+5. User can ask follow-ups
+
+
+FLOW 2: YOUTUBE LEARNING
+-------------------------
+1. Click extension icon on YouTube video page
+2. Select "Learn from YouTube"
+3. Extension auto-captures video URL
+4. AI generates transcription summary + key concepts
+5. User can ask specific questions about video
+
+
+FLOW 3: PDF UPLOAD & CHAT
+--------------------------
+1. Open popup → Click "Upload PDF"
+2. File picker opens
+3. PDF uploads, progress indicator shows
+4. AI confirms: "PDF analyzed! Ask me anything"
+5. User queries specific sections
+
+
+FLOW 4: BHAGAVAD GITA COUNSELING
+---------------------------------
+1. Open "Gita Counselor" from popup
+2. Special themed interface (warm orange tones)
+3. User asks life/ethical question
+4. AI responds with relevant Gita shloka + interpretation
+5. Show Sanskrit verse, translation, and practical guidance
+
+
+FEATURE LIMITATIONS (vs Mobile App)
+================================================================================
+
+INCLUDE:
+✅ AI Chat Assistant (core feature)
+✅ Screenshot & OCR Question Scan
+✅ PDF Upload & Analysis
+✅ YouTube Video Summarization
+✅ Gita Counselor
+✅ Podcast Script Generation
+✅ Chat History (local storage)
+✅ Light/Dark theme
+✅ LaTeX math rendering
+
+EXCLUDE (Mobile-only):
+❌ Live video learning
+❌ Test generation & practice quizzes
+❌ Gamification (badges, leaderboards)
+❌ Social features (share, collaborate)
+❌ Offline mode
+❌ Camera integration (use screenshot instead)
+❌ Voice input (can be added later)
+
+
+BRANDING ASSETS
+================================================================================
+
+Logo: Gradient "A" symbol (purple-blue gradient)
+Tagline: "AI-Powered Doubt Clearing"
+App Name: Adhyayan AI
+Mascot/Theme: Modern, minimalist, education-focused
+
+Icon Sizes Needed:
+- 16x16, 32x32, 48x48, 128x128 (for extension store)
+
+Color Accent Usage:
+- Purple (#6C5CE7) - Scan/OCR features
+- Blue (#4895EF) - Chat/AI features
+- Red (#FF7675) - YouTube learning
+- Orange (#FF9933) - Gita Counselor
+- Sky Blue (#0EA5E9) - Practice/Tests
+
+
+ACCESSIBILITY & UX
+================================================================================
+
+KEYBOARD SHORTCUTS
+------------------
+- Ctrl+Shift+A - Open popup
+- Ctrl+Shift+S - Open side panel
+- Ctrl+Shift+C - Capture screenshot
+- Esc - Close panels
+  
+
+LOADING STATES
+--------------
+- Skeleton loaders for chat messages
+- Progress bars for uploads
+- Shimmer effect for loading cards
+  
+
+ERROR HANDLING
+--------------
+- Friendly error messages
+- Retry mechanism
+- Offline mode notification
+- API timeout handling
+
+
+DEVELOPMENT PRIORITIES
+================================================================================
+
+PHASE 1 (MVP)
+-------------
+1. Popup UI with 6 quick actions
+2. Side panel chat interface
+3. Basic AI chat integration
+4. Chat history storage
+5. Theme toggle
+
+
+PHASE 2
+-------
+1. Screenshot & OCR tool
+2. PDF upload functionality
+3. Context menu integration
+4. YouTube summarization
+5. Math & code rendering
+
+
+PHASE 3
+-------
+1. Gita Counselor themed interface
+2. Podcast generation
+3. Advanced settings
+4. Keyboard shortcuts
+5. Performance optimization
+
+
+ADDITIONAL NOTES
+================================================================================
+
+- Target Audience: Indian students (Classes 8-12, College, Competitive Exams)
+- Languages: Primary English, future Hindi support
+- Performance: Keep popup load < 300ms, side panel < 500ms
+- Privacy: All data stored locally, API calls encrypted
+- Monetization: Free tier (10 queries/day), Premium (unlimited)
+
+
+QUICK ACTIONS DETAILED SPECIFICATIONS
+================================================================================
+
+1. SCAN QUESTION (Purple - #6C5CE7)
+   - Icon: line-scan or camera-outline
+   - Background: #EEF2FF
+   - Action: Capture screenshot → OCR → Send to AI
+   - Features: Drag to select, auto-crop, image preview
+
+2. UPLOAD PDF (Purple - #A29BFE)
+   - Icon: file-pdf or document
+   - Background: #F3E5F5
+   - Action: File picker → Upload → Process
+   - Features: Progress bar, page preview, search within PDF
+
+3. LEARN FROM YOUTUBE (Red - #FF7675)
+   - Icon: youtube or video
+   - Background: #FFF0F0
+   - Action: Auto-detect YT URL or manual paste
+   - Features: Timestamp links, key moments, transcript
+
+4. CHAT ASSISTANT (Blue - #4895EF)
+   - Icon: chat-bubble or message
+   - Background: #EFF6FF
+   - Action: Open side panel chat
+   - Features: Full chat interface, history, follow-ups
+
+5. GITA COUNSELOR (Orange - #FF9933)
+   - Icon: book or om-symbol
+   - Background: #FFF5E6
+   - Action: Special themed chat for life guidance
+   - Features: Sanskrit shlokas, interpretations, context
+
+6. PODCAST GENERATOR (Purple - #9B59B6)
+   - Icon: microphone or podcast
+   - Background: #F3E5F5
+   - Action: Convert topic/text to podcast script
+   - Features: Script preview, download option
+
+
+COMPONENT LIBRARY SUGGESTIONS
+================================================================================
+
+UI Components (Shadcn/UI or similar):
+- Button (primary, secondary, ghost variants)
+- Card (elevated, flat)
+- Input (text, textarea with auto-resize)
+- Dialog/Modal (for settings, confirmations)
+- Dropdown Menu (for quick actions)
+- Toast/Snackbar (for notifications)
+- Avatar (user profile)
+- Badge (streak counter, new features)
+- Skeleton Loader (for loading states)
+- Progress Bar (for uploads)
+- Tabs (for organizing settings)
+- Switch/Toggle (for theme, settings)
+
+
+CHROME STORAGE SCHEMA
+================================================================================
+
+```typescript
+interface StorageSchema {
+  // User Settings
+  settings: {
+    theme: 'light' | 'dark' | 'auto';
+    language: 'en' | 'hi';
+    apiKey?: string;
+    baseUrl: string;
+  };
+  
+  // User Profile
+  user: {
+    id: string;
+    email: string;
+    username: string;
+    avatarUrl?: string;
+    streak: number;
+    createdAt: number;
+  };
+  
+  // Chat History
+  chats: {
+    [chatId: string]: {
+      id: string;
+      threadId: string;
+      title: string;
+      createdAt: number;
+      updatedAt: number;
+      messages: Message[];
+    };
+  };
+  
+  // Recent Actions
+  recentActions: Array<{
+    type: 'scan' | 'pdf' | 'youtube' | 'chat' | 'gita' | 'podcast';
+    timestamp: number;
+    query: string;
+  }>;
+}
+```
+
+
+PERFORMANCE OPTIMIZATION TIPS
+================================================================================
+
+1. Lazy Loading:
+   - Load side panel only when opened
+   - Lazy load heavy libraries (KaTeX, Prism)
+   - Virtual scrolling for long chat histories
+
+2. Caching:
+   - Cache API responses (5 min TTL)
+   - Cache parsed markdown/LaTeX
+   - Service worker for offline fallback
+
+3. Debouncing:
+   - User typing (300ms)
+   - Scroll events (100ms)
+   - Resize events (200ms)
+
+4. Code Splitting:
+   - Separate bundles for popup, sidepanel, content scripts
+   - Dynamic imports for features
+
+
+TESTING CHECKLIST
+================================================================================
+
+Functionality:
+□ Popup opens and displays correctly
+□ Quick actions navigate/trigger properly
+□ Side panel chat sends/receives messages
+□ Math rendering works (inline and block)
+□ Code highlighting displays correctly
+□ PDF upload processes successfully
+□ Screenshot tool captures accurately
+□ OCR extracts text correctly
+□ YouTube URL detection works
+□ Context menu appears on selection
+□ Chat history saves and loads
+□ Theme toggle switches properly
+
+Cross-Browser:
+□ Chrome (Manifest V3)
+□ Firefox (Manifest V3 compatibility)
+□ Edge (Chromium-based)
+
+Responsive:
+□ Popup at 320px width
+□ Side panel 320px - 600px
+□ Chat messages wrap properly
+□ Images scale correctly
+
+Accessibility:
+□ Keyboard navigation works
+□ Screen reader compatible
+□ Focus indicators visible
+□ Color contrast meets WCAG AA
+
+Performance:
+□ Popup loads < 300ms
+□ Side panel opens < 500ms
+□ Message send < 1s (network dependent)
+□ Smooth animations (60fps)
+
+
+SECURITY CONSIDERATIONS
+================================================================================
+
+1. Content Security Policy (CSP):
+   - Restrict inline scripts
+   - Whitelist trusted domains
+   - Use nonce for inline styles
+
+2. API Key Protection:
+   - Never expose in client code
+   - Store securely in Chrome storage
+   - Encrypt if possible
+
+3. Data Privacy:
+   - Clear consent for data usage
+   - Option to delete all data
+   - No tracking without permission
+
+4. XSS Prevention:
+   - Sanitize all user inputs
+   - Use DOMPurify for HTML content
+   - Escape special characters
+
+
+ERROR MESSAGES CATALOG
+================================================================================
+
+Connection Errors:
+- "Unable to connect. Please check your internet connection."
+- "Server is taking too long to respond. Please try again."
+
+API Errors:
+- "Oops! Something went wrong. Please try again."
+- "Rate limit reached. Please wait a moment."
+- "Invalid API key. Please check your settings."
+
+Feature Errors:
+- "PDF upload failed. File might be corrupted or too large."
+- "Unable to extract text from image. Please try a clearer photo."
+- "YouTube URL not recognized. Please paste a valid link."
+
+User Errors:
+- "Please enter a question or message."
+- "Message is too long. Please keep it under 2000 characters."
+- "No text selected. Please highlight some text first."
+
+
+SAMPLE CODE SNIPPETS
+================================================================================
+
+Popup HTML Structure:
+```html
+<div class="popup-container">
+  <header class="popup-header">
+    <div class="logo">
+      <img src="icon48.png" alt="Adhyayan AI" />
+      <h1>Adhyayan AI</h1>
+    </div>
+    <div class="user-info">
+      <span class="streak">🔥 12 Days</span>
+      <img class="avatar" src="avatar.jpg" alt="User" />
+    </div>
+  </header>
+  
+  <div class="quick-actions">
+    <button class="action-card scan">
+      <span class="icon">📸</span>
+      <span class="label">Scan Question</span>
+    </button>
+    <!-- More action cards -->
+  </div>
+</div>
+```
+
+
+Side Panel Chat Structure:
+```html
+<div class="sidepanel-container">
+  <header class="chat-header">
+    <h2>Sarthi - Your AI Guide</h2>
+    <button class="history-btn">📚</button>
+    <button class="close-btn">✕</button>
+  </header>
+  
+  <div class="messages-container">
+    <!-- Messages rendered here -->
+  </div>
+  
+  <div class="input-container">
+    <textarea placeholder="Ask a doubt..."></textarea>
+    <button class="send-btn">➤</button>
+  </div>
+</div>
+```
+
+
+Message Component Example:
+```typescript
+const ChatMessage = ({ message }: { message: Message }) => {
+  return (
+    <div className={`message ${message.role}`}>
+      <div className="message-content">
+        <ReactMarkdown
+          components={{
+            code: CodeBlock,
+            p: ParagraphWithMath,
+          }}
+        >
+          {message.content}
+        </ReactMarkdown>
+      </div>
+      {message.links && (
+        <div className="message-links">
+          {message.links.map(link => (
+            <a href={link} target="_blank" rel="noopener">
+              {link}
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+```
+
+
+END OF PROMPT
+================================================================================
+
+Use this comprehensive specification to build the Adhyayan AI web extension 
+matching the mobile app's design, theme, and core functionality!
+
+Generated: February 11, 2026
+Based on: Adhyayan AI Mobile App (React Native + Expo)
