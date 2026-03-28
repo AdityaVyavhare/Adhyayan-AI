@@ -10,6 +10,7 @@ interface TypewriterEffectProps {
     speed?: number; // ms per chunk
     onComplete?: () => void;
     style?: any;
+    onLinkPress?: (url: string) => boolean | void;
 }
 
 const markdownStyles = {
@@ -31,7 +32,7 @@ const markdownStyles = {
     },
 };
 
-export default function TypewriterEffect({ content, speed = 8, onComplete, style }: TypewriterEffectProps) {
+export default function TypewriterEffect({ content, speed = 8, onComplete, style, onLinkPress }: TypewriterEffectProps) {
     const [displayedContent, setDisplayedContent] = useState('');
     const [parsedParts, setParsedParts] = useState<ContentPart[]>([]);
     const [isComplete, setIsComplete] = useState(false);
@@ -112,7 +113,16 @@ export default function TypewriterEffect({ content, speed = 8, onComplete, style
                     return <CodeBlockView key={`c-${index}`} code={part.content} style={style} />;
                 } else {
                     return (
-                        <Markdown key={`t-${index}`} style={{...markdownStyles, ...style}}>
+                        <Markdown
+                            key={`t-${index}`}
+                            style={{...markdownStyles, ...style}}
+                            onLinkPress={(url) => {
+                                const res = onLinkPress?.(url);
+                                // If handler returns false, do not continue default behavior.
+                                if (res === false) return false;
+                                return true;
+                            }}
+                        >
                             {part.content}
                         </Markdown>
                     );

@@ -2,21 +2,23 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Markdown from 'react-native-markdown-display';
+import { isYoutubeTimestampUrl, linkifyTimestampsToMarkdown, parseYoutubeTimestampUrl } from '@/utils/timestamps';
 
 interface AnswerCardProps {
     answer: string;
     videoTitle?: string;
     isLoading?: boolean;
+    onTimestampPress?: (timestamp: string) => void;
 }
 
-export default function AnswerCard({ answer, videoTitle, isLoading }: AnswerCardProps) {
+export default function AnswerCard({ answer, videoTitle, isLoading, onTimestampPress }: AnswerCardProps) {
     if (!answer && !isLoading) return null;
 
     const formatContent = (text: string) => {
         if (!text) return '';
         let formatted = text.replace(/\\n/g, '\n\n');
         formatted = formatted.replace(/(?<!\n)\n(?!\n)/g, '  \n');
-        return formatted;
+        return linkifyTimestampsToMarkdown(formatted);
     };
 
     return (
@@ -34,7 +36,18 @@ export default function AnswerCard({ answer, videoTitle, isLoading }: AnswerCard
             {isLoading ? (
                 <Text style={styles.loadingText}>Generating answer...</Text>
             ) : (
-                <Markdown style={markdownStyles}>
+                <Markdown
+                    style={markdownStyles}
+                    onLinkPress={(url) => {
+                        if (!url) return false;
+                        if (isYoutubeTimestampUrl(url)) {
+                            const ts = parseYoutubeTimestampUrl(url);
+                            if (ts) onTimestampPress?.(ts);
+                            return false;
+                        }
+                        return true;
+                    }}
+                >
                     {formatContent(answer)}
                 </Markdown>
             )}

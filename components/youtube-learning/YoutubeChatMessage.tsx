@@ -8,6 +8,11 @@ import * as Clipboard from "expo-clipboard";
 import React, { useMemo } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Markdown from "react-native-markdown-display";
+import {
+  isYoutubeTimestampUrl,
+  linkifyTimestampsToMarkdown,
+  parseYoutubeTimestampUrl,
+} from "@/utils/timestamps";
 
 interface YoutubeChatMessageProps {
   message: Message;
@@ -51,18 +56,40 @@ export default function YoutubeChatMessage({
       case "text":
       default:
         if (!segment.content.trim()) return null;
+        const contentWithTimestampLinks = linkifyTimestampsToMarkdown(
+          segment.content,
+        );
         if (shouldAnimate) {
           return (
             <TypewriterEffect
               key={index}
-              content={segment.content}
+              content={contentWithTimestampLinks}
               style={markdownStyles}
+              onLinkPress={(url) => {
+                if (isYoutubeTimestampUrl(url)) {
+                  const ts = parseYoutubeTimestampUrl(url);
+                  if (ts) onTimestampPress?.(ts);
+                  return false;
+                }
+                return true;
+              }}
             />
           );
         }
         return (
-          <Markdown key={index} style={markdownStyles}>
-            {segment.content}
+          <Markdown
+            key={index}
+            style={markdownStyles}
+            onLinkPress={(url) => {
+              if (isYoutubeTimestampUrl(url)) {
+                const ts = parseYoutubeTimestampUrl(url);
+                if (ts) onTimestampPress?.(ts);
+                return false;
+              }
+              return true;
+            }}
+          >
+            {contentWithTimestampLinks}
           </Markdown>
         );
     }

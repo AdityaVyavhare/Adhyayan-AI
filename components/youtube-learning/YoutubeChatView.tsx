@@ -106,6 +106,7 @@ export default function YoutubeChatView({
                     <AnswerCard 
                         answer={latestAiMessage?.content || latestAiMessage?.body || ''} 
                         isLoading={isLoading && !latestAiMessage}
+                        onTimestampPress={handleTimestampPress}
                     />
                     {latestAiMessage?.timestamps && (
                         <KeyMoments 
